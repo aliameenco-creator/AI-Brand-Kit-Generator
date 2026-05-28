@@ -1,4 +1,9 @@
-const _LH_FONT = `<defs><style>@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&amp;display=swap'); text { font-family: 'DM Sans', system-ui, sans-serif; }</style></defs>`;
+function _LH_FONT(profile) {
+  const fam = (profile && profile.typography && profile.typography.fontFamily) || "DM Sans";
+  const safe = String(fam).replace(/[<>"']/g, "");
+  const importFam = encodeURIComponent(safe).replace(/%20/g, "+");
+  return `<defs><style>@import url('https://fonts.googleapis.com/css2?family=${importFam}:wght@400;500;600;700;800&amp;display=swap'); text { font-family: '${safe}', system-ui, sans-serif; }</style></defs>`;
+}
 const _LH_ESC = (s) => String(s == null ? "" : s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 
 function _lhLogo(profile, x, y, size, fill, textColor) {
@@ -26,7 +31,7 @@ function _lhGeometric(profile) {
   const contact = profile.contact || {};
 
   return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 2100 2970">
-    ${_LH_FONT}
+    ${_LH_FONT(profile)}
     <rect width="2100" height="2970" fill="#ffffff"/>
 
     <!-- Top-right geometric shapes -->
@@ -77,16 +82,17 @@ function _lhGeometric(profile) {
     <rect x="100" y="1080" width="8" height="1100" fill="${primary}"/>
     <rect x="124" y="1080" width="8" height="1100" fill="${dark}"/>
 
-    <!-- Body text - properly sized for A4 -->
+    <!-- Body text — wrap-mode editable block -->
     <g transform="translate(180, 1130)">
-      <text font-size="28" fill="${dark}" opacity="0.85">
-        <tspan x="0" dy="0" data-editable="true" data-field="body-1">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor</tspan>
-        <tspan x="0" dy="44" data-editable="true" data-field="body-2">incididunt ut labore et dolore magna aliqua. Quis ipsum suspendisse ultrices</tspan>
-        <tspan x="0" dy="44" data-editable="true" data-field="body-3">gravida. Risus commodo viverra maecenas accumsan lacus vel facilisis.</tspan>
-        <tspan x="0" dy="88" data-editable="true" data-field="body-4">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor</tspan>
-        <tspan x="0" dy="44" data-editable="true" data-field="body-5">incididunt ut labore et dolore magna aliqua.</tspan>
-        <tspan x="0" dy="88" data-editable="true" data-field="body-6">Quis ipsum suspendisse ultrices gravida. Risus commodo viverra maecenas</tspan>
-        <tspan x="0" dy="44" data-editable="true" data-field="body-7">accumsan lacus vel facilisis. Sed do eiusmod tempor incididunt.</tspan>
+      <text font-size="28" fill="${dark}" opacity="0.85"
+            data-editable="true" data-wrap="true" data-wrap-chars="68" data-line-height="44" data-wrap-x="0" data-field="bodyText">
+        <tspan x="0" dy="0">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor</tspan>
+        <tspan x="0" dy="44">incididunt ut labore et dolore magna aliqua. Quis ipsum suspendisse ultrices</tspan>
+        <tspan x="0" dy="44">gravida. Risus commodo viverra maecenas accumsan lacus vel facilisis.</tspan>
+        <tspan x="0" dy="88">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor</tspan>
+        <tspan x="0" dy="44">incididunt ut labore et dolore magna aliqua.</tspan>
+        <tspan x="0" dy="88">Quis ipsum suspendisse ultrices gravida. Risus commodo viverra maecenas</tspan>
+        <tspan x="0" dy="44">accumsan lacus vel facilisis. Sed do eiusmod tempor incididunt.</tspan>
       </text>
     </g>
 
@@ -138,7 +144,7 @@ function _lhCleanModern(profile) {
   const owner = profile.people || {};
 
   return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 2100 2970">
-    ${_LH_FONT}
+    ${_LH_FONT(profile)}
     <rect width="2100" height="2970" fill="#ffffff"/>
 
     <!-- Top decorative triangles -->
@@ -193,19 +199,18 @@ function _lhCleanModern(profile) {
       <line x1="420" y1="-50" x2="420" y2="1620" stroke="${dark}" stroke-width="2" opacity="0.35"/>
     </g>
 
-    <!-- Body -->
+    <!-- Body — wrap-mode editable block -->
     <g transform="translate(660, 680)">
       <text x="0" y="0" font-size="34" font-weight="700" fill="${dark}"
             data-editable="true" data-field="greeting">Dear Sir,</text>
-      <text font-size="26" fill="${dark}" opacity="0.85">
-        <tspan x="0" dy="110" data-editable="true" data-field="body-1">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do</tspan>
-        <tspan x="0" dy="42" data-editable="true" data-field="body-2">eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut</tspan>
-        <tspan x="0" dy="42" data-editable="true" data-field="body-3">enim ad minim veniam, quis nostrud exercitation ullamco laboris.</tspan>
-        <tspan x="0" dy="84" data-editable="true" data-field="body-4">Duis aute irure dolor in reprehenderit in voluptate velit esse</tspan>
-        <tspan x="0" dy="42" data-editable="true" data-field="body-5">cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat</tspan>
-        <tspan x="0" dy="42" data-editable="true" data-field="body-6">cupidatat non proident, sunt in culpa qui officia deserunt mollit.</tspan>
-        <tspan x="0" dy="84" data-editable="true" data-field="body-7">Sed ut perspiciatis unde omnis iste natus error sit voluptatem</tspan>
-        <tspan x="0" dy="42" data-editable="true" data-field="body-8">accusantium doloremque laudantium, totam rem aperiam.</tspan>
+      <text font-size="26" fill="${dark}" opacity="0.85"
+            data-editable="true" data-wrap="true" data-wrap-chars="50" data-line-height="42" data-wrap-x="0" data-field="bodyText">
+        <tspan x="0" dy="110">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do</tspan>
+        <tspan x="0" dy="42">eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut</tspan>
+        <tspan x="0" dy="42">enim ad minim veniam, quis nostrud exercitation ullamco laboris.</tspan>
+        <tspan x="0" dy="84">Duis aute irure dolor in reprehenderit in voluptate velit esse</tspan>
+        <tspan x="0" dy="42">cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat</tspan>
+        <tspan x="0" dy="42">cupidatat non proident, sunt in culpa qui officia deserunt mollit.</tspan>
       </text>
     </g>
 

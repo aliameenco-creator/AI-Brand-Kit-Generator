@@ -144,7 +144,84 @@ function normalizeProfile(p) {
   // Will be filled by image-loader after AI
   p.images = p.images || { logo: "", hero: "", supporting: [] };
 
+  // Typography
+  p.typography = p.typography || {};
+  const COMMON_GOOGLE_FONTS = new Set([
+    "Inter", "Roboto", "Open Sans", "Lato", "Montserrat", "Poppins", "Source Sans 3", "Source Sans Pro",
+    "Nunito", "Nunito Sans", "Raleway", "Work Sans", "DM Sans", "Manrope", "Plus Jakarta Sans",
+    "Playfair Display", "Merriweather", "Lora", "PT Serif", "Cormorant Garamond", "EB Garamond",
+    "Oswald", "Bebas Neue", "Archivo", "Karla", "Quicksand", "Mulish", "Rubik", "Outfit",
+    "Space Grotesk", "Urbanist", "Figtree", "Public Sans", "IBM Plex Sans", "IBM Plex Serif",
+    "Libre Baskerville", "Libre Franklin", "Crimson Text", "Cardo", "Vollkorn", "Bitter"
+  ]);
+  const fam = (p.typography.fontFamily || "").trim();
+  p.typography.fontFamily = fam && /^[A-Za-z][A-Za-z0-9 ]{1,40}$/.test(fam) ? fam : "DM Sans";
+  // If Gemini returned an obscure non-Google font, fall back gracefully
+  if (!COMMON_GOOGLE_FONTS.has(p.typography.fontFamily)) {
+    // still allow it — Google Fonts will 404 silently and SVG falls back to sans-serif
+  }
+
   return p;
+}
+
+// ============ AI REFINE (used by per-face refine button) ============
+// Takes the current profile, an asset key (business-card / letterhead / brochure / invoice),
+// and a user instruction. Returns a partial profile patch with updated fields.
+async function refineBrandAsset(brandProfile, assetKey, instruction) {
+  const focus = {
+    "business-card": "businessName, tagline, people (ownerName, ownerTitle, ownerEmail, ownerPhone), contact",
+    "letterhead": "businessName, tagline, contact, people (ownerName, ownerTitle)",
+    "brochure": "brochure (headline, subheadline, aboutText, serviceDescriptions, whyUsPoints, ctaText), services",
+    "invoice": "invoice (prefix, currency, paymentTerms, bankDetails, notes), services"
+  }[assetKey] || "any";
+
+  const prompt = `You are refining one asset of an existing brand profile.
+
+Current brand profile JSON:
+${JSON.stringify(brandProfile, (k, v) => k === "images" || k === "_firecrawlScreenshot" ? undefined : v, 2)}
+
+The user wants to refine the "${assetKey}" asset. Their instruction:
+"${instruction}"
+
+Update only the fields that are relevant to this asset. Focus on: ${focus}.
+
+Return a SINGLE JSON object containing only the changed top-level fields, preserving the existing schema (e.g. if you change the headline, return {"brochure": {"headline": "...", ...other unchanged brochure fields preserved}}).
+
+CRITICAL: Return only valid JSON. No markdown, no backticks, no commentary.`;
+
+  const response = await fetch(
+    `${CONFIG.GEMINI_BASE_URL}/${CONFIG.GEMINI_MODEL}:generateContent?key=${CONFIG.GEMINI_API_KEY}`,
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        contents: [{ parts: [{ text: prompt }] }],
+        generationConfig: {
+          temperature: 0.5,
+          maxOutputTokens: 4096,
+          responseMimeType: "application/json"
+        }
+      })
+    }
+  );
+  if (!response.ok) {
+    const t = await response.text();
+    console.error("Refine error:", response.status, t);
+    throw new Error("Refinement failed. Please try again.");
+  }
+  const data = await response.json();
+  const text = data.candidates && data.candidates[0]
+    && data.candidates[0].content
+    && data.candidates[0].content.parts
+    && data.candidates[0].content.parts[0]
+    && data.candidates[0].content.parts[0].text;
+  if (!text) throw new Error("Empty response from refinement.");
+  try { return JSON.parse(text); }
+  catch (e) {
+    const m = text.match(/\{[\s\S]*\}/);
+    if (m) return JSON.parse(m[0]);
+    throw new Error("Could not parse refinement JSON.");
+  }
 }
 
 function buildBrandPrompt(rawData) {
@@ -157,6 +234,7 @@ Business Name (raw): ${rawData.rawName}
 Tagline (raw): ${rawData.rawTagline}
 Logo URL: ${rawData.rawLogoUrl || "Not found"}
 Image candidates (from website): ${JSON.stringify(rawData.rawImages || [])}
+Fonts detected on website: ${JSON.stringify(rawData.rawFonts || [])}
 Colors found: ${JSON.stringify(rawData.rawColors)}
 Contact info: ${JSON.stringify(rawData.rawContact)}
 Social links: ${JSON.stringify(rawData.rawSocials)}
@@ -246,6 +324,11 @@ Analyze the above data and return a SINGLE JSON object with the following struct
     "logoUrl": "Pick the best LOGO URL — the company's brand mark. Usually small (under 400px), often contains the word 'logo' in its filename, lives in the site header. Return empty string if no genuine logo found.",
     "heroUrl": "Pick the best HERO PHOTO URL — a large representative photo of the business's product, team, space, or work. MUST be a real photo, not a UI element, button, or icon. Empty string if no good photo found.",
     "supportingUrls": ["Up to 2 additional photo URLs that show different aspects of the business (people, spaces, products). Empty array if none."]
+  },
+
+  "typography": {
+    "fontFamily": "The PRIMARY font family this brand uses. Pick from the 'Fonts detected' list above if any are real Google Fonts (e.g. 'Inter', 'Roboto', 'Poppins', 'Montserrat', 'Open Sans', 'Lato', 'Playfair Display', 'DM Sans'). If the list is empty or only contains generic fallbacks, choose ONE Google Font that suits the brand's industry and personality. Return the family name only (no weights, no quotes).",
+    "fontStyle": "One of: 'modern-sans', 'classic-serif', 'rounded-friendly', 'geometric-bold', 'editorial-serif' — the visual character of the chosen font."
   },
 
   "styles": {

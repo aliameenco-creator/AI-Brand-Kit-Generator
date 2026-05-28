@@ -79,6 +79,14 @@
         <span class="caret">▼</span> Brand Profile
       </button>
       <div class="summary-content" id="summary-content"></div>
+      <div class="brand-toolbar">
+        <label class="upload-logo-btn">
+          <input type="file" id="logo-upload" accept="image/*" hidden />
+          <span>📤 Upload custom logo</span>
+        </label>
+        <button class="link-btn" id="clear-logo-btn" title="Revert to scraped/auto logo">Clear custom logo</button>
+        <span class="brand-toolbar-hint" id="brand-toolbar-hint"></span>
+      </div>
     </section>
 
     <section class="card hidden" id="results-section">
@@ -97,6 +105,15 @@
         <div class="preview-hint" id="preview-hint">Click any text to edit</div>
         <div class="preview-stage" id="preview-stage"></div>
       </div>
+      <div class="refine-row" id="refine-row">
+        <div class="refine-input-wrap">
+          <input type="text" id="refine-input" class="text-input refine-input"
+            placeholder="✨ Ask AI to refine this asset (e.g. make headline shorter, more playful)" />
+          <button class="btn btn-primary refine-btn" id="refine-btn">Refine</button>
+        </div>
+        <div class="refine-hint" id="refine-hint">Refines the current asset's text content using AI</div>
+      </div>
+
       <div class="export-row">
         <button class="btn btn-secondary" id="export-png">Export PNG ↓</button>
         <button class="btn btn-secondary" id="export-jpg">Export JPG ↓</button>

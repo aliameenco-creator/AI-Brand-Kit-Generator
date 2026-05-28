@@ -7,9 +7,9 @@ async function scrapeWebsite(url) {
     },
     body: JSON.stringify({
       url: url,
-      formats: ["markdown", "html"],
+      formats: ["markdown", "html", "links", "screenshot"],
       onlyMainContent: false,
-      includeTags: ["meta", "link", "header", "footer", "nav", "h1", "h2", "p", "img", "a"],
+      includeTags: ["meta", "link", "style", "header", "footer", "nav", "h1", "h2", "p", "img", "a"],
       waitFor: 3000
     })
   });

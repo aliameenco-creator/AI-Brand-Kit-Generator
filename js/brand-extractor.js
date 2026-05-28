@@ -14,19 +14,67 @@ function extractBrandData(firecrawlResponse, sourceUrl) {
   const rawSocials = pickSocials(html, markdown);
   const rawServices = pickServices(doc, markdown);
   const rawImages = pickImages(doc, sourceUrl, rawLogoUrl);
+  const rawFonts = pickFonts(doc, html);
+  const screenshotUrl = payload.screenshot || (payload.metadata && payload.metadata.screenshot) || "";
 
   return {
     rawName,
     rawTagline,
     rawLogoUrl,
     rawImages,
+    rawFonts,
     rawColors,
     rawContact,
     rawSocials,
     rawServices,
     rawContent: markdown || textContent(doc),
-    sourceUrl: sourceUrl
+    sourceUrl: sourceUrl,
+    screenshotUrl
   };
+}
+
+// Extract font families used by the website.
+// Looks at: Google Fonts link tags, <style> blocks, inline style attrs.
+// Returns an ordered list (most-likely-primary first).
+function pickFonts(doc, html) {
+  const counts = new Map();
+  const bump = (name, weight) => {
+    if (!name) return;
+    const clean = String(name).trim().replace(/^["']|["']$/g, "");
+    if (!clean || clean.length > 40) return;
+    if (/^(system-ui|-apple-system|BlinkMacSystemFont|sans-serif|serif|monospace|cursive|fantasy|ui-|inherit|initial|unset|var\()/i.test(clean)) return;
+    counts.set(clean, (counts.get(clean) || 0) + weight);
+  };
+
+  // 1) Google Fonts <link> tags — strongest signal
+  if (doc) {
+    Array.from(doc.querySelectorAll('link[href*="fonts.googleapis.com"], link[href*="fonts.bunny.net"]')).forEach(link => {
+      const href = link.getAttribute("href") || "";
+      const matches = href.matchAll(/family=([^&]+)/gi);
+      for (const m of matches) {
+        // Could be multiple families separated by | or &family= already split
+        const families = decodeURIComponent(m[1]).split("|");
+        families.forEach(fam => {
+          const name = fam.split(":")[0].replace(/\+/g, " ").trim();
+          bump(name, 10);
+        });
+      }
+    });
+  }
+
+  // 2) font-family declarations in any CSS in HTML (style tags, inline styles, head)
+  const cssRegex = /font-family\s*:\s*([^;}\n]+)/gi;
+  let match;
+  while ((match = cssRegex.exec(html)) !== null) {
+    const decl = match[1].split("!")[0]; // drop !important
+    const first = decl.split(",")[0];
+    bump(first, 1);
+  }
+
+  return Array.from(counts.entries())
+    .sort((a, b) => b[1] - a[1])
+    .map(([name]) => name)
+    .slice(0, 5);
 }
 
 function pickImages(doc, sourceUrl, logoUrl) {

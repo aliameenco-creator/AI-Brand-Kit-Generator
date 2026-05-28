@@ -1,4 +1,9 @@
-const _BR_FONT = `<defs><style>@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&amp;display=swap'); text { font-family: 'DM Sans', system-ui, sans-serif; }</style></defs>`;
+function _BR_FONT(profile) {
+  const fam = (profile && profile.typography && profile.typography.fontFamily) || "DM Sans";
+  const safe = String(fam).replace(/[<>"']/g, "");
+  const importFam = encodeURIComponent(safe).replace(/%20/g, "+");
+  return `<defs><style>@import url('https://fonts.googleapis.com/css2?family=${importFam}:wght@400;500;600;700;800&amp;display=swap'); text { font-family: '${safe}', system-ui, sans-serif; }</style></defs>`;
+}
 const _BR_ESC = (s) => String(s == null ? "" : s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 
 function _brWrap(text, maxChars) {
@@ -18,6 +23,18 @@ function _brTspans(text, maxChars, x, lineHeight, field) {
   return _brWrap(text, maxChars).map((line, i) =>
     `<tspan x="${x}" dy="${i === 0 ? 0 : lineHeight}" data-editable="true" data-field="${field}-${i}">${_BR_ESC(line)}</tspan>`
   ).join("");
+}
+
+// Produces just the inner <tspan>s for a wrap-mode block.
+// The PARENT <text> element should carry the data-wrap attributes.
+function _brWrapInner(text, maxChars, x, lineHeight) {
+  return _brWrap(text, maxChars).map((line, i) =>
+    `<tspan x="${x}" dy="${i === 0 ? 0 : lineHeight}">${_BR_ESC(line)}</tspan>`
+  ).join("");
+}
+
+function _brWrapAttrs(field, maxChars, lineHeight, x) {
+  return `data-editable="true" data-wrap="true" data-wrap-chars="${maxChars}" data-line-height="${lineHeight}" data-wrap-x="${x}" data-field="${field}"`;
 }
 
 function _brLogo(profile, x, y, size, fill, textColor) {
@@ -48,7 +65,7 @@ function _brCorporate(profile) {
 
   // OUTSIDE
   const outside = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 2970 2100">
-    ${_BR_FONT}
+    ${_BR_FONT(profile)}
     <rect width="2970" height="2100" fill="${light}"/>
 
     <!-- PANEL 3: services list -->
@@ -64,8 +81,9 @@ function _brCorporate(profile) {
           <text x="36" y="36" text-anchor="middle" dominant-baseline="central" font-size="32" font-weight="700" fill="${textOnPrimary}">${i + 1}</text>
           <text x="100" y="42" font-size="32" font-weight="700" fill="${dark}"
                 data-editable="true" data-field="back-svc-${i}-name">${_BR_ESC(s.name)}</text>
-          <text x="100" y="86" font-size="22" fill="${dark}" opacity="0.75">
-            ${_brTspans(s.description, 38, 100, 32, `back-svc-${i}-desc`)}
+          <text x="100" y="86" font-size="22" fill="${dark}" opacity="0.75"
+                ${_brWrapAttrs(`backSvc${i}Desc`, 38, 32, 100)}>
+            ${_brWrapInner(s.description, 38, 100, 32)}
           </text>
         </g>
       `).join("")}
@@ -79,8 +97,9 @@ function _brCorporate(profile) {
           data-editable="true" data-field="aboutTitle">${_BR_ESC(b.aboutTitle)}</text>
     <rect x="1070" y="220" width="160" height="8" fill="${primary}"/>
 
-    <text x="1070" y="320" font-size="28" fill="${dark}" opacity="0.85">
-      ${_brTspans(b.aboutText, 32, 1070, 42, "about")}
+    <text x="1070" y="320" font-size="28" fill="${dark}" opacity="0.85"
+          ${_brWrapAttrs("aboutText", 32, 42, 1070)}>
+      ${_brWrapInner(b.aboutText, 32, 1070, 42)}
     </text>
 
     <!-- Pie chart decoration -->
@@ -146,7 +165,7 @@ function _brCorporate(profile) {
 
   // INSIDE
   const inside = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 2970 2100">
-    ${_BR_FONT}
+    ${_BR_FONT(profile)}
     <rect width="2970" height="2100" fill="#ffffff"/>
 
     <!-- PANEL 5 -->
@@ -155,8 +174,9 @@ function _brCorporate(profile) {
           data-editable="true" data-field="aboutLabel">${_BR_ESC(String(b.aboutTitle).toUpperCase())}</text>
     <rect x="80" y="200" width="180" height="8" fill="${accent}"/>
 
-    <text x="80" y="290" font-size="26" fill="${dark}" opacity="0.85">
-      ${_brTspans(b.aboutText, 34, 80, 38, "in-about")}
+    <text x="80" y="290" font-size="26" fill="${dark}" opacity="0.85"
+          ${_brWrapAttrs("inAboutText", 34, 38, 80)}>
+      ${_brWrapInner(b.aboutText, 34, 80, 38)}
     </text>
 
     <!-- Bar chart decoration -->
@@ -190,8 +210,9 @@ function _brCorporate(profile) {
         <rect x="0" y="0" width="12" height="260" fill="${primary}"/>
         <text x="50" y="70" font-size="34" font-weight="700" fill="${primary}"
               data-editable="true" data-field="in-svc-${i}-name">${_BR_ESC(s.name)}</text>
-        <text x="50" y="130" font-size="22" fill="${dark}" opacity="0.85">
-          ${_brTspans(s.description, 38, 50, 32, `in-svc-${i}-desc`)}
+        <text x="50" y="130" font-size="22" fill="${dark}" opacity="0.85"
+              ${_brWrapAttrs(`inSvc${i}Desc`, 38, 32, 50)}>
+          ${_brWrapInner(s.description, 38, 50, 32)}
         </text>
       </g>
     `).join("")}
@@ -260,7 +281,7 @@ function _brBoldImagery(profile) {
 
   // OUTSIDE
   const outside = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 2970 2100">
-    ${_BR_FONT}
+    ${_BR_FONT(profile)}
     <rect width="2970" height="2100" fill="${dark}"/>
 
     <!-- PANEL 3: hero left + about/quote -->
@@ -293,8 +314,9 @@ function _brBoldImagery(profile) {
           data-editable="true" data-field="aboutCompanyLabel">OUR COMPANY</text>
     <rect x="740" y="272" width="80" height="6" fill="${primary}"/>
 
-    <text x="740" y="350" font-size="20" fill="${textOnPrimary}" opacity="0.88">
-      ${_brTspans(b.aboutText, 22, 740, 30, "bi-about")}
+    <text x="740" y="350" font-size="20" fill="${textOnPrimary}" opacity="0.88"
+          ${_brWrapAttrs("biAboutText", 22, 30, 740)}>
+      ${_brWrapInner(b.aboutText, 22, 740, 30)}
     </text>
 
     <!-- two key points (further down) -->
@@ -382,7 +404,7 @@ function _brBoldImagery(profile) {
 
   // INSIDE
   const inside = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 2970 2100">
-    ${_BR_FONT}
+    ${_BR_FONT(profile)}
     <rect width="2970" height="2100" fill="${dark}"/>
 
     <!-- PANEL 5 -->
@@ -403,8 +425,9 @@ function _brBoldImagery(profile) {
           data-editable="true" data-field="in-svcTitle">${_BR_ESC(String(b.servicesTitle).toUpperCase())}</text>
     <rect x="80" y="1300" width="160" height="8" fill="${primary}"/>
 
-    <text x="80" y="1400" font-size="22" fill="${textOnPrimary}" opacity="0.78">
-      ${_brTspans(b.aboutText, 34, 80, 32, "in-svc-intro")}
+    <text x="80" y="1400" font-size="22" fill="${textOnPrimary}" opacity="0.78"
+          ${_brWrapAttrs("inSvcIntro", 34, 32, 80)}>
+      ${_brWrapInner(b.aboutText, 34, 80, 32)}
     </text>
 
     <!-- 3 services with numbered circles -->
@@ -442,8 +465,9 @@ function _brBoldImagery(profile) {
         <text x="30" y="30" text-anchor="middle" dominant-baseline="central" font-size="32" font-weight="700" fill="${textOnPrimary}">${i + 4}</text>
         <text x="84" y="36" font-size="28" font-weight="700" fill="${textOnPrimary}"
               data-editable="true" data-field="in-mid-svc-${i}-name">${_BR_ESC(s.name)}</text>
-        <text x="84" y="76" font-size="20" fill="${textOnPrimary}" opacity="0.75">
-          ${_brTspans(s.description, 44, 84, 26, `in-mid-svc-${i}-d`)}
+        <text x="84" y="76" font-size="20" fill="${textOnPrimary}" opacity="0.75"
+              ${_brWrapAttrs(`inMidSvc${i}Desc`, 44, 26, 84)}>
+          ${_brWrapInner(s.description, 44, 84, 26)}
         </text>
       </g>
     `).join("")}
@@ -459,8 +483,9 @@ function _brBoldImagery(profile) {
     <text x="2050" y="310" font-size="50" font-weight="700" fill="${textOnPrimary}" letter-spacing="3"
           data-editable="true" data-field="missionTitle">OUR MISSION</text>
 
-    <text x="2050" y="400" font-size="20" fill="${textOnPrimary}" opacity="0.78">
-      ${_brTspans(b.aboutText, 34, 2050, 28, "mission-text")}
+    <text x="2050" y="400" font-size="20" fill="${textOnPrimary}" opacity="0.78"
+          ${_brWrapAttrs("missionText", 34, 28, 2050)}>
+      ${_brWrapInner(b.aboutText, 34, 2050, 28)}
     </text>
 
     ${(b.whyUsPoints || []).slice(0, 4).map((pt, i) => `

@@ -1,5 +1,10 @@
 // Shared helpers
-const _BC_FONT = `<defs><style>@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&amp;display=swap'); text { font-family: 'DM Sans', system-ui, sans-serif; }</style></defs>`;
+function _BC_FONT(profile) {
+  const fam = (profile && profile.typography && profile.typography.fontFamily) || "DM Sans";
+  const safe = String(fam).replace(/[<>"']/g, "");
+  const importFam = encodeURIComponent(safe).replace(/%20/g, "+");
+  return `<defs><style>@import url('https://fonts.googleapis.com/css2?family=${importFam}:wght@400;500;600;700;800&amp;display=swap'); text { font-family: '${safe}', system-ui, sans-serif; }</style></defs>`;
+}
 const _BC_ESC = (s) => String(s == null ? "" : s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 
 // Logo helper. shape can be 'circle' or 'square' (rounded).
@@ -57,7 +62,7 @@ function _bcClassicLight(profile) {
   const owner = profile.people || {}, contact = profile.contact || {};
 
   const front = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 890 510">
-    ${_BC_FONT}
+    ${_BC_FONT(profile)}
     <rect width="890" height="510" fill="#ffffff"/>
 
     <!-- subtle corner triangles -->
@@ -87,7 +92,7 @@ function _bcClassicLight(profile) {
   </svg>`;
 
   const back = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 890 510">
-    ${_BC_FONT}
+    ${_BC_FONT(profile)}
     <rect width="890" height="510" fill="${dark}"/>
     <path d="M 0 0 L 280 0 L 200 510 L 0 510 Z" fill="${primary}"/>
 
@@ -135,7 +140,7 @@ function _bcBoldDark(profile) {
   const owner = profile.people || {}, contact = profile.contact || {};
 
   const front = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 890 510">
-    ${_BC_FONT}
+    ${_BC_FONT(profile)}
     <rect width="890" height="510" fill="${dark}"/>
     <!-- left chevron accent -->
     <path d="M 0 0 L 120 0 L 60 255 L 120 510 L 0 510 Z" fill="${primary}"/>
@@ -154,7 +159,7 @@ function _bcBoldDark(profile) {
   </svg>`;
 
   const back = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 890 510">
-    ${_BC_FONT}
+    ${_BC_FONT(profile)}
     <rect width="890" height="510" fill="${dark}"/>
     <!-- right chevron accent -->
     <path d="M 890 0 L 770 0 L 830 255 L 770 510 L 890 510 Z" fill="${primary}"/>
@@ -205,7 +210,7 @@ function _bcElegantCurves(profile) {
   const hero = profile.images && profile.images.hero;
 
   const front = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 890 510">
-    ${_BC_FONT}
+    ${_BC_FONT(profile)}
     <rect width="890" height="510" fill="#ffffff"/>
 
     <!-- Hero left zone, clipped by a smooth curve -->
@@ -235,7 +240,7 @@ function _bcElegantCurves(profile) {
   </svg>`;
 
   const back = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 890 510">
-    ${_BC_FONT}
+    ${_BC_FONT(profile)}
     <rect width="890" height="510" fill="${dark}"/>
     <rect x="450" y="0" width="440" height="510" fill="#ffffff"/>
 

@@ -1,4 +1,9 @@
-const _IN_FONT = `<defs><style>@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&amp;display=swap'); text { font-family: 'DM Sans', system-ui, sans-serif; }</style></defs>`;
+function _IN_FONT(profile) {
+  const fam = (profile && profile.typography && profile.typography.fontFamily) || "DM Sans";
+  const safe = String(fam).replace(/[<>"']/g, "");
+  const importFam = encodeURIComponent(safe).replace(/%20/g, "+");
+  return `<defs><style>@import url('https://fonts.googleapis.com/css2?family=${importFam}:wght@400;500;600;700;800&amp;display=swap'); text { font-family: '${safe}', system-ui, sans-serif; }</style></defs>`;
+}
 const _IN_ESC = (s) => String(s == null ? "" : s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 
 function _inLogo(profile, x, y, size, fill, textColor) {
@@ -43,7 +48,7 @@ function _inClassicAccent(profile) {
   const invNumber = `${inv.prefix || "INV"}-${String(new Date().getFullYear()).slice(-2)}${String(new Date().getMonth() + 1).padStart(2, "0")}-001`;
 
   return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 2100 2970">
-    ${_IN_FONT}
+    ${_IN_FONT(profile)}
     <rect width="2100" height="2970" fill="#ffffff"/>
 
     <!-- Header -->
@@ -139,15 +144,18 @@ function _inClassicAccent(profile) {
 
       <text x="0" y="68" font-size="22" font-weight="700" fill="${dark}"
             data-editable="true" data-field="termsLabel">Terms &amp; Conditions</text>
-      <text x="0" y="108" font-size="18" fill="${dark}" opacity="0.7">
-        <tspan x="0" dy="0" data-editable="true" data-field="terms-1">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Fusce</tspan>
-        <tspan x="0" dy="28" data-editable="true" data-field="terms-2">dignissim porta consectetur.</tspan>
+      <text x="0" y="108" font-size="18" fill="${dark}" opacity="0.7"
+            data-editable="true" data-wrap="true" data-wrap-chars="60" data-line-height="28" data-wrap-x="0" data-field="termsText">
+        <tspan x="0" dy="0">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Fusce</tspan>
+        <tspan x="0" dy="28">dignissim porta consectetur.</tspan>
       </text>
 
       <text x="0" y="210" font-size="22" font-weight="700" fill="${dark}"
             data-editable="true" data-field="payInfoLabel">Payment Info:</text>
       <text x="0" y="250" font-size="18" fill="${dark}" opacity="0.85"
-            data-editable="true" data-field="bankDetails">${_IN_ESC(inv.bankDetails)}</text>
+            data-editable="true" data-wrap="true" data-wrap-chars="80" data-line-height="26" data-wrap-x="0" data-field="bankDetails">
+        <tspan x="0" dy="0">${_IN_ESC(inv.bankDetails)}</tspan>
+      </text>
     </g>
 
     <!-- Signature -->
@@ -178,7 +186,7 @@ function _inBoldHeader(profile) {
   const invNumber = `${inv.prefix || "INV"}-${String(new Date().getFullYear()).slice(-2)}${String(new Date().getMonth() + 1).padStart(2, "0")}-001`;
 
   return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 2100 2970">
-    ${_IN_FONT}
+    ${_IN_FONT(profile)}
     <rect width="2100" height="2970" fill="#ffffff"/>
 
     <!-- Top brand row -->
@@ -271,9 +279,10 @@ function _inBoldHeader(profile) {
     <g transform="translate(140, ${680 + 80 + items.length * 100 + 360})">
       <text x="0" y="0" font-size="20" font-weight="700" fill="${dark}"
             data-editable="true" data-field="termsLabel">Terms &amp; Conditions</text>
-      <text x="0" y="40" font-size="16" fill="${dark}" opacity="0.7">
-        <tspan x="0" dy="0" data-editable="true" data-field="terms-1">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Pellentesque magna</tspan>
-        <tspan x="0" dy="24" data-editable="true" data-field="terms-2">vitae diam vehicula. Fusce dignissim porta consectetur.</tspan>
+      <text x="0" y="40" font-size="16" fill="${dark}" opacity="0.7"
+            data-editable="true" data-wrap="true" data-wrap-chars="70" data-line-height="24" data-wrap-x="0" data-field="termsText">
+        <tspan x="0" dy="0">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Pellentesque magna</tspan>
+        <tspan x="0" dy="24">vitae diam vehicula. Fusce dignissim porta consectetur.</tspan>
       </text>
 
       <g transform="translate(1380, 40)">
